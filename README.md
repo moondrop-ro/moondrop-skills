@@ -7,6 +7,7 @@ Shared skill library for [Claude Code](https://claude.ai/claude-code). Install g
 | Command | Description |
 |---------|-------------|
 | `/wrap-up` | End-of-session checklist — commits & pushes uncommitted work, checks service deployments (Vercel, Sanity, Supabase), reviews conversation for memories to persist, updates CLAUDE.md, marks completed checklist items, captures deferred work to backlog, and presents a scannable summary |
+| `/memory-dream` | Memory consolidation — merges near-duplicates, prunes stale entries, clusters related feedback, cross-references CLAUDE.md. Auto mode by default (plan-and-wait on first run) |
 
 ## Install
 
