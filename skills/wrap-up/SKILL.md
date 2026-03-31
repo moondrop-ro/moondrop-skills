@@ -26,19 +26,42 @@ After pushing, check and report on all connected services:
 
 Report the status of each service, or "No updates needed" for services unaffected by the session.
 
-## 3. Memory Review
+## 3. What I Learned About You
 
-Review the conversation for anything worth persisting to memory. Start with the user — what did you learn about *them* this session?
+Before saving any memories, **present what you observed about the user this session**. This is the most important part of wrap-up — the user should see themselves reflected back and approve what gets remembered.
 
-**About the user (save to global memory):**
-- **Working style**: Did you observe how the user prefers to approach problems? (e.g., research-first, prefers incremental over big-bang, wants control at checkpoints)
-- **Design philosophy**: Did the user reveal values or principles that guide their decisions? (e.g., tool-agnostic, publishable by default, AI-first)
-- **Preferences**: Did the user express how they like to work, communicate, or receive help?
-- **Feedback**: Did the user correct your approach in a way that should apply to future sessions? (e.g., "don't do X", "always do Y"). Also capture *confirmed* approaches — when a non-obvious choice worked and the user validated it.
+**How to surface observations:**
+
+Review the full conversation and identify:
+- **Working style shifts**: Did the user do something differently than before? (e.g., ran commands independently for the first time, asked deeper questions, changed their approach)
+- **New preferences or corrections**: Did they say "don't do X" or "I prefer Y"? Did they approve a non-obvious approach that should be repeated?
+- **Values revealed through decisions**: What did their choices tell you about what they care about? (e.g., chose architecture over speed, prioritized accessibility, asked about the system before running it)
+- **Growth or learning**: Did they learn something new this session? Did their questions evolve from "what" to "why" or "how"?
+
+**Present observations to the user as a numbered list:**
+
+```
+### What I Learned About You This Session
+
+1. [Observation] — [what it means for future sessions]
+2. [Observation] — [what it means for future sessions]
+3. [Observation] — [what it means for future sessions]
+
+Which of these should I remember? (e.g., "all", "1, 3", "none")
+```
+
+Be specific and concrete. "You're getting better at X" is vague. "You ran the Vercel env var commands in your own terminal instead of asking me to do it, and debugged the cd error yourself" is concrete.
+
+**After the user approves**, save approved observations to the appropriate memory files. Do NOT save before approval.
+
+## 4. Project & Feedback Memory
+
+After the user observations are handled, review the conversation for project-level memories:
 
 **About the project (save to project memory):**
 - **Project context**: Did you learn about ongoing work, goals, deadlines, or decisions not captured in code/git?
 - **References**: Did the user mention external resources, dashboards, docs, or tracking systems?
+- **Feedback**: Did the user correct your approach in a way that should apply to future sessions?
 
 Memories have two scopes:
 - **Project-scoped** (`~/.claude/projects/<project>/memory/`) — project context, references, project-specific patterns
@@ -52,9 +75,9 @@ For each potential memory:
 3. If updating — modify the existing memory file
 4. If nothing new — report "No new memories to save"
 
-Save or update memories automatically — do not ask for confirmation.
+Project and feedback memories can be saved automatically (they're about the project, not the person). Report what was saved.
 
-## 4. CLAUDE.md Review
+## 5. CLAUDE.md Review
 
 Consider whether any project-level CLAUDE.md updates are needed based on the session:
 - New architectural decisions or patterns established
@@ -66,7 +89,7 @@ Also check the global `~/.claude/CLAUDE.md` if session-wide learnings apply acro
 
 Update CLAUDE.md automatically if changes are needed. Report what was updated, or "No CLAUDE.md updates needed."
 
-## 5. Checklist / Plan Progress
+## 6. Checklist / Plan Progress
 
 If the session involved working through a checklist or plan (e.g., `docs/plans/*-checklist.md`), check:
 - Were any items completed that should be marked `[x]`?
@@ -74,7 +97,7 @@ If the session involved working through a checklist or plan (e.g., `docs/plans/*
 
 Report what was checked off, or "No active checklists affected."
 
-## 6. Backlog Capture
+## 7. Backlog Capture
 
 Review the session for potential backlog items — deferred work, rolled-back features, bugs noticed in passing, ideas discussed but not acted on, TODOs mentioned but not completed.
 
@@ -83,7 +106,7 @@ Review the session for potential backlog items — deferred work, rolled-back fe
 3. **Append approved items** to `BACKLOG.md` in the project root, grouped under an appropriate category heading. Use `- [ ]` checkbox format.
 4. Don't add items that are already in the backlog.
 
-## 7. Session Summary
+## 8. Session Summary
 
 Provide a brief summary:
 - **What was done**: 2-3 bullet points of the main work completed
@@ -107,7 +130,10 @@ Present all findings in a single, scannable report. Use this structure:
 - Sanity: [schema deployed / no changes]
 - Supabase: [migration applied / no changes]
 
-### Memory
+### What I Learned About You
+- [numbered observations, wait for approval before saving]
+
+### Project Memory
 - [saved/updated/none] ...
 
 ### CLAUDE.md
