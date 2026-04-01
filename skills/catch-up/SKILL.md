@@ -1,14 +1,179 @@
 ---
 name: catch-up
+version: 0.1.0
 description: >
   Load context about what changed across your projects since you last checked.
   Use when starting a session and you want Claude to be aware of recent activity
   from agents, teammates, CI, and deploys. Invoke with /catch-up.
 ---
 
+# /catch-up
+
+> **Catch Up** — Start every session with full awareness.
+
+When you open a new session, Claude has no idea what happened since last time. `/catch-up` fixes that. It loads recent commits, agent activity, deployments, and migrations so Claude works with full context from the first message.
+
+### What it does
+
+| Source | What it checks |
+|--------|---------------|
+| Git | Commits, branches, merges, tags since last check |
+| Paperclip | Agent activity — tasks completed, in progress, blocked |
+| Vercel | Recent deployments, status, failures |
+| Supabase | Database migrations applied or pending |
+
+### Usage
+
+```
+/catch-up                          # Current repo, since last check
+/catch-up 3d                       # Last 3 days
+/catch-up --full                   # Entire history
+/catch-up --all                    # All registered repos
+/catch-up --all 3d                 # All repos, last 3 days
+/catch-up ops moon-drop            # Named repos only
+```
+
+### Configuration
+
+Zero-config works out of the box (git only). For multi-repo + multi-adapter setup, create `~/.claude/catch-up.json`:
+
+```json
+{
+  "repos": {
+    "my-app": {
+      "path": "/home/user/projects/my-app",
+      "adapters": ["git", "vercel", "supabase"]
+    }
+  }
+}
+```
+
+---
+
 # Catch Up
 
 Load context about what happened across the user's projects since they last checked. Your primary goal is to **understand what changed so you can work with full awareness** for the rest of this session. The summary you present to the user is secondary — your own context-loading is the point.
+
+## Preamble — Version Check
+
+Before starting the skill, check if claude-skills has an update available. This should be fast and non-blocking — use cached results when possible.
+
+```bash
+_CS_STATE="$HOME/.claude-skills"
+mkdir -p "$_CS_STATE"
+
+# Skip if checks disabled
+if [ -f "$_CS_STATE/update-check" ] && [ "$(cat "$_CS_STATE/update-check")" = "false" ]; then
+  echo "UPDATE_CHECK_DISABLED"
+  exit 0
+fi
+
+# Skip if snoozed
+if [ -f "$_CS_STATE/update-snoozed" ]; then
+  _SV=$(awk '{print $1}' "$_CS_STATE/update-snoozed")
+  _SL=$(awk '{print $2}' "$_CS_STATE/update-snoozed")
+  _ST=$(awk '{print $3}' "$_CS_STATE/update-snoozed")
+  _NOW=$(date +%s)
+  case "$_SL" in 1) _D=86400;; 2) _D=172800;; *) _D=604800;; esac
+  if [ $((_NOW - _ST)) -lt "$_D" ]; then
+    echo "SNOOZED until $(date -d @$((_ST + _D)) '+%Y-%m-%d %H:%M' 2>/dev/null || echo 'later')"
+    exit 0
+  fi
+fi
+
+# Get installed version
+_INSTALLED=$(cat "$HOME/.claude/skills/catch-up/VERSION" 2>/dev/null || echo "0.0.0")
+
+# Use cache if fresh (24h TTL)
+_CACHE="$_CS_STATE/last-update-check"
+if [ -f "$_CACHE" ]; then
+  _CT=$(awk 'NR==1{print $1}' "$_CACHE")
+  _NOW=$(date +%s)
+  if [ $((_NOW - _CT)) -lt 86400 ]; then
+    cat "$_CACHE" | tail -n +2
+    exit 0
+  fi
+fi
+
+# Find repo and fetch
+_CS_REPO=""
+for _C in "$HOME/.claude-skills/repo" "$HOME/claude-skills" "$HOME/projects/claude-skills" "$HOME/dev/claude-skills" "$HOME/src/claude-skills" "$HOME/code/claude-skills"; do
+  [ -d "$_C/.git" ] && _CS_REPO="$_C" && break
+done
+
+if [ -z "$_CS_REPO" ]; then
+  echo "NO_REPO"
+  exit 0
+fi
+
+cd "$_CS_REPO"
+git fetch origin --quiet 2>/dev/null
+_REMOTE=$(git show origin/main:VERSION 2>/dev/null | tr -d '[:space:]')
+_NOW=$(date +%s)
+
+if [ -n "$_REMOTE" ] && [ "$_INSTALLED" != "$_REMOTE" ]; then
+  _RESULT="UPGRADE_AVAILABLE $_INSTALLED $_REMOTE $_CS_REPO"
+else
+  _RESULT="UP_TO_DATE $_INSTALLED"
+fi
+
+printf "%s\n%s\n" "$_NOW" "$_RESULT" > "$_CACHE"
+echo "$_RESULT"
+```
+
+**If `UPGRADE_AVAILABLE {old} {new} {repo}`:**
+
+First, read the changelog to build a short summary of what's new:
+```bash
+cd "{repo}"
+git show origin/main:CHANGELOG.md 2>/dev/null || echo "(no changelog)"
+```
+From the changelog, extract changes between v{old} and v{new}. Compose a **one-line summary of 20 words or fewer** describing the most interesting user-facing changes. This is the `{whats_new}` summary.
+
+Check auto-upgrade preference:
+```bash
+_AUTO=""
+[ -f "$HOME/.claude-skills/auto-upgrade" ] && _AUTO=$(cat "$HOME/.claude-skills/auto-upgrade")
+echo "AUTO_UPGRADE=$_AUTO"
+```
+
+**If `AUTO_UPGRADE=true`:** Log "Auto-upgrading claude-skills v{old} -> v{new}... ({whats_new})" and run the upgrade (see below). If it fails, warn and continue with the skill.
+
+**Otherwise**, use AskUserQuestion:
+- Question: "claude-skills **v{new}** is available (you're on v{old}): *{whats_new}*. Upgrade now?"
+- Options: ["Yes, upgrade now", "Always keep me up to date", "Not now", "Never ask again"]
+
+| Response | Action |
+|----------|--------|
+| **Yes, upgrade now** | Run upgrade below |
+| **Always keep me up to date** | `echo "true" > "$HOME/.claude-skills/auto-upgrade"` — tell user auto-upgrade enabled, then run upgrade |
+| **Not now** | Write snooze: `echo "{new} {level} $(date +%s)" > "$HOME/.claude-skills/update-snoozed"` (level 1=24h, 2=48h, 3+=1wk). Tell user when next reminder will be. Continue with the skill. |
+| **Never ask again** | `echo "false" > "$HOME/.claude-skills/update-check"` — tell user checks disabled. Continue with the skill. |
+
+**Upgrade steps:**
+```bash
+cd "{repo}"
+_OLD=$(cat VERSION 2>/dev/null || echo "unknown")
+git stash 2>&1
+git pull origin main --ff-only 2>&1 || git reset --hard origin/main
+bash install.sh
+rm -f "$HOME/.claude-skills/update-snoozed"
+echo "$_OLD" > "$HOME/.claude-skills/just-upgraded-from"
+```
+
+After upgrading, read `{repo}/CHANGELOG.md`, summarize changes between old and new versions as 3-7 bullets, then display:
+```
+claude-skills v{new} — upgraded from v{old}!
+
+What's new:
+- ...
+
+Happy skilling!
+```
+
+Then continue with the skill below.
+
+**If `UP_TO_DATE`, `SNOOZED`, `UPDATE_CHECK_DISABLED`, or `NO_REPO`:** Continue silently with the skill.
 
 ## 1. Parse Arguments
 

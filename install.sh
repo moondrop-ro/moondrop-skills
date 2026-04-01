@@ -34,9 +34,19 @@ for skill in "$SCRIPT_DIR"/skills/*/; do
   skill_name="$(basename "$skill")"
   mkdir -p "$SKILLS_DIR/$skill_name"
   cp -r "$skill"* "$SKILLS_DIR/$skill_name/"
+  # Copy VERSION into each skill dir for installed-version tracking
+  if [ -f "$SCRIPT_DIR/VERSION" ]; then
+    cp "$SCRIPT_DIR/VERSION" "$SKILLS_DIR/$skill_name/VERSION"
+  fi
   echo "  Installed: /$skill_name"
   count=$((count + 1))
 done
 
-echo ""
+# Write installed version marker
+if [ -f "$SCRIPT_DIR/VERSION" ]; then
+  VERSION=$(cat "$SCRIPT_DIR/VERSION")
+  echo ""
+  echo "Version: $VERSION"
+fi
+
 echo "Done. $count skill(s) available in your next Claude Code session."
