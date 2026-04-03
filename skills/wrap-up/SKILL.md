@@ -84,9 +84,17 @@ fi
 
 # Find repo and fetch
 _CS_REPO=""
-for _C in "$HOME/.claude-skills/repo" "$HOME/claude-skills" "$HOME/projects/claude-skills" "$HOME/dev/claude-skills" "$HOME/src/claude-skills" "$HOME/code/claude-skills"; do
-  [ -d "$_C/.git" ] && _CS_REPO="$_C" && break
-done
+# Check pointer file first (contains repo path)
+if [ -f "$_CS_STATE/repo" ]; then
+  _PTR=$(cat "$_CS_STATE/repo" | tr -d '[:space:]')
+  [ -d "$_PTR/.git" ] && _CS_REPO="$_PTR"
+fi
+# Fall back to well-known locations
+if [ -z "$_CS_REPO" ]; then
+  for _C in "$HOME/claude-skills" "$HOME/projects/claude-skills" "$HOME/dev/claude-skills" "$HOME/src/claude-skills" "$HOME/code/claude-skills"; do
+    [ -d "$_C/.git" ] && _CS_REPO="$_C" && break
+  done
+fi
 
 if [ -z "$_CS_REPO" ]; then
   echo "NO_REPO"
