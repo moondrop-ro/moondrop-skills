@@ -171,9 +171,7 @@ Report:
 - **Unpushed commits**: list commit subjects, or "in sync with remote"
 - **Current branch**: confirm which branch we're on
 
-If there are uncommitted changes, commit them automatically with a descriptive message summarizing the session's work.
-
-After committing (or if there were already unpushed commits), **push to remote** automatically. This triggers Vercel auto-deploy. Report the push result and note that Vercel deployment is in progress.
+If there are uncommitted changes, **ask the user** whether to commit and push. Use AskUserQuestion with options: "Commit & push", "Commit only", "Skip — I'll handle it". If the user chooses to commit, use a descriptive message summarizing the session's work.
 
 ## 2. Service Deployments
 
@@ -198,21 +196,26 @@ Review the full conversation and identify:
 - **Values revealed through decisions**: What did their choices tell you about what they care about? (e.g., chose architecture over speed, prioritized accessibility, asked about the system before running it)
 - **Growth or learning**: Did they learn something new this session? Did their questions evolve from "what" to "why" or "how"?
 
-**Present observations to the user as a numbered list:**
+**The distinction that matters:** Actions are evidence, not observations. "You batched 3 related backlog items" is a summary of what happened. "You think in dependency chains, not priority lists" is an insight about who you are. Only surface insights — things that change how I should work with you in future sessions.
 
-```
-### What I Learned About You This Session
+**Bad:** "You picked up 3 backlog items and asked me to fix them all" (action replay)
+**Good:** "You have zero tolerance for deferred cleanup — when you see tech debt, you want it gone now, not next session" (personality insight that changes my behavior)
 
-1. [Observation] — [what it means for future sessions]
-2. [Observation] — [what it means for future sessions]
-3. [Observation] — [what it means for future sessions]
+Only include observations that would actually change how you work with this person.
 
-Which of these should I remember? (e.g., "all", "1, 3", "none")
-```
+**Present via interactive multi-select using AskUserQuestion:**
 
-Be specific and concrete. "You're getting better at X" is vague. "You ran the Vercel env var commands in your own terminal instead of asking me to do it, and debugged the cd error yourself" is concrete.
+Use `AskUserQuestion` with `multiSelect: true`. Each observation becomes one option:
+- **label**: The insight (concise, 5-10 words)
+- **description**: The behavioral impact — explain concretely what changes. Format: "**Without this:** [current behavior]. **With this:** [improved behavior]." The user should be able to read just the description and understand why this memory is worth keeping.
 
-**After the user approves**, save approved observations to the appropriate memory files. Do NOT save before approval.
+**Example option:**
+- label: "Zero tolerance for deferred cleanup"
+- description: "**Without this:** I'd suggest adding dead code to the backlog for later. **With this:** I'd proactively delete dead code during the session instead of deferring it."
+
+If the session revealed nothing new about the user, skip the AskUserQuestion entirely and report "Nothing new to report about your working style this session."
+
+**After the user selects**, save only the selected observations to the appropriate memory files. Do NOT save before approval.
 
 ## 4. Project & Feedback Memory
 
@@ -239,15 +242,25 @@ Project and feedback memories can be saved automatically (they're about the proj
 
 ## 5. CLAUDE.md Review
 
-Consider whether any project-level CLAUDE.md updates are needed based on the session:
-- New architectural decisions or patterns established
-- New gotchas discovered
-- Workflow changes
-- New files/sections added to the project
+Consider whether any project-level CLAUDE.md updates are needed based on the session.
 
-Also check the global `~/.claude/CLAUDE.md` if session-wide learnings apply across projects.
+**Only add to CLAUDE.md if ALL of these are true:**
+1. It's a behavioral rule, gotcha, or non-obvious convention — not a file/component description
+2. Removing it would cause Claude to make mistakes in future sessions
+3. It can't be derived by reading the code, configs, or existing docs
+4. It's not already documented in DESIGN.md, docs/, or memory files
 
-Update CLAUDE.md automatically if changes are needed. Report what was updated, or "No CLAUDE.md updates needed."
+**Never add:**
+- Component inventories or file-path catalogs (Claude can explore the codebase)
+- Counts that change (number of documents, queries, types, pages)
+- Information already in @-imported files (DESIGN.md, docs/data-architecture.md)
+- Standard framework behavior Claude already knows
+
+**Size check:** If project CLAUDE.md exceeds ~120 lines, review for items that can be cut before adding new ones. CLAUDE.md should stay concise — bloat causes Claude to ignore instructions.
+
+Also check the global `~/.claude/CLAUDE.md` if session-wide learnings apply across projects — same filtering rules apply.
+
+Update CLAUDE.md automatically if changes pass the filter above. Report what was updated, or "No CLAUDE.md updates needed."
 
 ## 6. Checklist / Plan Progress
 
@@ -259,12 +272,17 @@ Report what was checked off, or "No active checklists affected."
 
 ## 7. Backlog Capture
 
-Review the session for potential backlog items — deferred work, rolled-back features, bugs noticed in passing, ideas discussed but not acted on, TODOs mentioned but not completed.
+Review the session for potential backlog items — deferred work, rolled-back features, bugs noticed in passing, ideas discussed but not acted on, TODOs mentioned but not completed. Don't add items that are already in the backlog.
 
-1. **Present a numbered list** of candidate items with a short description each
-2. **Let the user pick** which to add (e.g., "1, 3, 5" or "all" or "none")
-3. **Append approved items** to `BACKLOG.md` in the project root, grouped under an appropriate category heading. Use `- [ ]` checkbox format.
-4. Don't add items that are already in the backlog.
+**Present via interactive multi-select using AskUserQuestion:**
+
+Use `AskUserQuestion` with `multiSelect: true`. Each candidate backlog item becomes one option:
+- **label**: Short item title (5-10 words)
+- **description**: What needs to be done and why
+
+If there are no backlog candidates, skip the AskUserQuestion entirely and report "Nothing to add to the backlog."
+
+**After the user selects**, append only the selected items to `BACKLOG.md` in the project root, grouped under an appropriate category heading. Use `- [ ]` checkbox format.
 
 ## 8. Client Decision Log
 
@@ -301,7 +319,12 @@ Provide a brief summary:
 
 ## Output Format
 
-Present all findings in a single, scannable report. Use this structure:
+Present the report, then the two interactive selectors, then the summary. The flow is:
+
+1. **Report** (text) — Git, Services, CLAUDE.md, Checklists, Project Memory, Client Decision Log
+2. **Interactive selectors** (AskUserQuestion) — "What I Learned" + "Backlog" as two multi-select questions in a single AskUserQuestion call. Each question uses `multiSelect: true`. Combine both into one call so the user sees them together.
+3. **Process selections** — save approved memories, append approved backlog items
+4. **Summary** (text) — Done, Next, Open
 
 ```
 ## Wrap-Up Report
@@ -316,23 +339,22 @@ Present all findings in a single, scannable report. Use this structure:
 - Sanity: [schema deployed / no changes]
 - Supabase: [migration applied / no changes]
 
-### What I Learned About You
-- [numbered observations, wait for approval before saving]
-
-### Project Memory
-- [saved/updated/none] ...
-
 ### CLAUDE.md
 - [updated/no changes] ...
 
 ### Checklists
 - [updated/no active checklists] ...
 
-### Backlog
-- [proposed items or "nothing to add"]
+### Project Memory
+- [saved/updated/none] ...
 
 ### Client Decision Log
 - [written to docs/decisions/... / no decisions this session]
+
+[AskUserQuestion with up to 2 multi-select questions:
+  Q1 header:"Remember" — "What should I remember about you?" — insights as options
+  Q2 header:"Backlog" — "What should go in the backlog?" — deferred items as options
+  Skip either question if there are no candidates for it.]
 
 ### Summary
 - Done: ...
