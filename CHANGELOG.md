@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0
+
+- Removed the version-check preamble from all skills. Skills no longer prompt to upgrade on invocation; pull and run `bash install.sh` manually when you want the latest. Removes the `~/.moondrop-skills/` state machine and per-skill `VERSION` copies from `install.sh`.
+
 ## 0.2.0
 
 - `/wrap-up` — added §8.5 next-session handoff prompt. Writes a self-contained kickoff doc to `docs/handoffs/YYYY-MM-DD-<topic>.md` for multi-session work (gated on uncommitted worktrees, active plans, pending decisions, or held items). Replaces ad-hoc terminal-dumped prompts with a markdown file the next session can `@`-reference.
