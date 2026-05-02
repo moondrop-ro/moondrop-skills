@@ -1,8 +1,8 @@
-# Claude Code Skills
+# moondrop-skills
 
 Shared skill library for [Claude Code](https://claude.ai/claude-code). Install globally or per project, then use via slash commands.
 
-Skills check for updates automatically — you'll be prompted when a new version is available.
+Pull and reinstall manually when you want the latest — `git pull && bash install.sh`.
 
 ---
 
@@ -10,7 +10,7 @@ Skills check for updates automatically — you'll be prompted when a new version
 
 > Never leave a session with loose ends.
 
-Everything that should happen before you close a session, automated into one command. Commits work, checks deploys, surfaces what it learned about you, captures deferred work, and presents a scannable summary.
+Everything that should happen before you close a session, automated into one command. Commits work, checks deploys, surfaces what it learned about you, captures deferred work, writes a client decision log, generates a next-session handoff prompt for multi-session work, and presents a scannable summary.
 
 | Step | Action |
 |------|--------|
@@ -19,8 +19,10 @@ Everything that should happen before you close a session, automated into one com
 | About you | Surfaces observations about your working style — you approve what gets remembered |
 | Memory | Saves project context, feedback, and references |
 | CLAUDE.md | Updates project instructions if the session revealed new patterns |
+| Checklists | Marks completed items in active plans |
 | Backlog | Captures deferred work, TODOs, and ideas you didn't act on |
 | Decisions | Logs product/design/technical decisions in a client-readable format |
+| Handoff | Writes a self-contained kickoff prompt for the next session (multi-session work only) |
 | Summary | What was done, what's next, what's open |
 
 ```
@@ -84,22 +86,7 @@ cp -r skills/wrap-up .claude/skills/          # Per project
 
 ## Updating
 
-Every skill checks for updates automatically when invoked. If a new version is available, you'll be prompted:
-
-- **Yes, upgrade now** — pulls and re-installs immediately
-- **Always keep me up to date** — enables auto-upgrade for future updates
-- **Not now** — snoozes with escalating backoff (24h, 48h, 1 week)
-- **Never ask again** — disables update checks
-
-Preferences are stored in `~/.moondrop-skills/` and can be changed manually:
-
-```bash
-echo true > ~/.moondrop-skills/auto-upgrade     # Enable auto-upgrade
-echo false > ~/.moondrop-skills/update-check    # Disable update checks
-rm ~/.moondrop-skills/update-check              # Re-enable update checks
-```
-
-Manual update:
+There is no automated update prompt. Pull and reinstall when you want the latest:
 
 ```bash
 cd moondrop-skills && git pull && bash install.sh
@@ -107,12 +94,14 @@ cd moondrop-skills && git pull && bash install.sh
 
 ## Adding Skills
 
-Each skill is a folder inside `skills/` containing a `SKILL.md` file:
+Each skill is a folder inside `skills/` containing a `SKILL.md` file. Larger skills can include a `references/` subfolder for on-demand templates and format guides.
 
 ```
 skills/
 └── my-skill/
-    └── SKILL.md
+    ├── SKILL.md
+    └── references/    # optional, loaded on demand
+        └── *.md
 ```
 
-The folder name becomes the slash command (`/my-skill`). Run `bash install.sh` after adding new skills.
+The folder name becomes the slash command (`/my-skill`). Run `bash install.sh` after adding new skills. See `CLAUDE.md` for the full skill file format and authoring conventions.

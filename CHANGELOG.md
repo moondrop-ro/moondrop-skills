@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.0
+
+- `/memory-dream` — same compaction pass as 0.4.0 brought to /wrap-up. SKILL.md trimmed from 184 to ~135 lines by removing the "What it does" feature table, the "Modes" preamble, and prose redundancy across steps. Description rewritten with trigger phrases ("memory dream", "tidy my memory", "clean up memory", "consolidate memories", "memory maintenance", "defragment memory", "prune stale memories", "merge duplicate memories") for more reliable activation. Added the moondrop source-identity callout. No behavioral changes — every step, mode rule, and format rule is preserved.
+- `README.md` — removed stale auto-update copy. The tagline and "Updating" section described the `~/.moondrop-skills/` state machine that was removed in 0.3.0; both now reflect the manual `git pull && bash install.sh` flow. /wrap-up feature table updated to include Handoff (added in 0.2.0) and Checklists. Added a brief note about the optional `references/` subfolder pattern.
+- `CLAUDE.md` — documented the deliberate `version:` frontmatter divergence from Anthropic's spec (the field is for humans tracking what's installed, not for the harness).
+
 ## 0.4.0
 
 - `/wrap-up` — restructured for how Claude ingests skills. SKILL.md compacted from 332 → ~150 lines by removing prose redundancy, deduplicating the `AskUserQuestion` preamble, and extracting heavy templates to `references/`. The handoff prompt template moved to `references/handoff-template.md`; client decision log format moved to `references/decision-log.md`. Description rewritten with more trigger phrases ("wrap up", "end of session", "log off", "before I close", etc.) for more reliable activation. Phase 8.5 renumbered to 9; summary is now phase 10. No behavioral changes — every gate, routing rule, and skip-if condition is preserved. Re-run `bash install.sh` to pick up the new `references/` files.
