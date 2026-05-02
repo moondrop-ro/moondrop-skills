@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.0
+
+- `/wrap-up` — restructured for how Claude ingests skills. SKILL.md compacted from 332 → ~150 lines by removing prose redundancy, deduplicating the `AskUserQuestion` preamble, and extracting heavy templates to `references/`. The handoff prompt template moved to `references/handoff-template.md`; client decision log format moved to `references/decision-log.md`. Description rewritten with more trigger phrases ("wrap up", "end of session", "log off", "before I close", etc.) for more reliable activation. Phase 8.5 renumbered to 9; summary is now phase 10. No behavioral changes — every gate, routing rule, and skip-if condition is preserved. Re-run `bash install.sh` to pick up the new `references/` files.
+
 ## 0.3.1
 
 - `/wrap-up` — handoff filenames and headings now include hour and minute. Format is `docs/handoffs/YYYY-MM-DD-HHMM-<topic>.md` (e.g. `2026-05-02-1430-feature-flag-cleanup.md`); H1 reads `pick up from YYYY-MM-DD HH:MM wrap-up`. Avoids collisions when more than one wrap-up runs the same day.
