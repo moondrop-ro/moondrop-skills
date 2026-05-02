@@ -1,6 +1,6 @@
 ---
 name: wrap-up
-version: 0.3.0
+version: 0.3.1
 description: >
   End-of-session checklist — commits & pushes uncommitted work, checks service
   deployments (Vercel, Sanity, Supabase), surfaces what it learned about you,
@@ -197,7 +197,7 @@ For multi-session work, the next session needs a self-contained kickoff prompt �
 
 **Trigger gate.** Only generate this section if at least one is true:
 - `git worktree list` shows >1 worktree (uncommitted parallel work)
-- An active plan in `docs/plans/*.md` has unchecked items the session worked on
+- An active plan in `docs/plans/*.md` has unchecked items remaining — phased multi-session work, next session needs the kickoff regardless of whether this session ticked boxes
 - The session ended on an explicit pending decision ("stop here, regroup", "checkpoint before next wave")
 - Held items / verification gaps were raised but not landed
 
@@ -205,14 +205,14 @@ If none are true, **skip this step silently** — small single-session wraps don
 
 **How to write.**
 
-1. Create `docs/handoffs/YYYY-MM-DD-<topic>.md` (create `docs/handoffs/` if it doesn't exist). Use the same `<topic>` slug as the related plan or decision doc when one exists.
-2. Lead with a `# <Topic> — pick up from YYYY-MM-DD wrap-up` H1 and a 2–3 sentence "## State at hand-off" paragraph. No fluff. What's signed off, what's mid-flight, what's pushed vs uncommitted.
+1. Create `docs/handoffs/YYYY-MM-DD-HHMM-<topic>.md` (create `docs/handoffs/` if it doesn't exist). Use the local 24h time of the wrap-up for `HHMM` (e.g. `2026-05-02-1430-feature-flag-cleanup.md`). Use the same `<topic>` slug as the related plan or decision doc when one exists.
+2. Lead with a `# <Topic> — pick up from YYYY-MM-DD HH:MM wrap-up` H1 and a 2–3 sentence "## State at hand-off" paragraph. No fluff. What's signed off, what's mid-flight, what's pushed vs uncommitted.
 3. Use the section structure below. **Skip any section that has nothing to put in it** — empty sections are noise.
 
 **Template:**
 
 ```markdown
-# <Topic> — pick up from <YYYY-MM-DD> wrap-up
+# <Topic> — pick up from <YYYY-MM-DD HH:MM> wrap-up
 
 ## State at hand-off
 
@@ -269,7 +269,7 @@ If none are true, **skip this step silently** — small single-session wraps don
 - Don't re-quote CLAUDE.md rules — link the line numbers.
 - Don't restate decisions already captured in `docs/decisions/...` — link them.
 
-**Present to the user:** "Multi-session work in flight. Writing handoff prompt to `docs/handoffs/YYYY-MM-DD-<topic>.md` so next session can pick up cleanly. Open it tomorrow, paste the first paragraph or `@`-reference the file."
+**Present to the user:** "Multi-session work in flight. Writing handoff prompt to `docs/handoffs/YYYY-MM-DD-HHMM-<topic>.md` so next session can pick up cleanly. Open it tomorrow, paste the first paragraph or `@`-reference the file."
 
 After writing, report the path. Don't dump the contents in terminal — the whole point is to avoid that.
 

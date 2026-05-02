@@ -1,6 +1,6 @@
 ---
 name: memory-dream
-version: 0.3.0
+version: 0.3.1
 description: >
   Universal memory consolidation — discovers and tidies Claude Code memory files
   across project hierarchies. Merges near-duplicates, prunes stale entries,

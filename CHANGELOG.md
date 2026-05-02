@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.1
+
+- `/wrap-up` — handoff filenames and headings now include hour and minute. Format is `docs/handoffs/YYYY-MM-DD-HHMM-<topic>.md` (e.g. `2026-05-02-1430-feature-flag-cleanup.md`); H1 reads `pick up from YYYY-MM-DD HH:MM wrap-up`. Avoids collisions when more than one wrap-up runs the same day.
+- `/wrap-up` — handoff trigger now fires whenever an active plan in `docs/plans/*.md` has unchecked items, not only when the current session worked on them. Phased multi-session tasks reliably get a kickoff prompt for the next session.
+
 ## 0.3.0
 
 - Removed the version-check preamble from all skills. Skills no longer prompt to upgrade on invocation; pull and run `bash install.sh` manually when you want the latest. Removes the `~/.moondrop-skills/` state machine and per-skill `VERSION` copies from `install.sh`.
